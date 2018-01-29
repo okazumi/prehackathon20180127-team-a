@@ -1,0 +1,474 @@
+[
+    {
+        "id": "d7d9aeea.0e585",
+        "type": "tab",
+        "label": "prehakathon",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "67977668.c455a8",
+        "type": "http in",
+        "z": "d7d9aeea.0e585",
+        "name": "",
+        "url": "/bot",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 140,
+        "y": 400,
+        "wires": [
+            [
+                "97185ccd.bb334"
+            ]
+        ]
+    },
+    {
+        "id": "97185ccd.bb334",
+        "type": "function",
+        "z": "d7d9aeea.0e585",
+        "name": "入力テキスト受け渡し",
+        "func": "context.global.input_text =  msg.payload.input_text;\nmsg.payload = msg.payload.input_text;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 320,
+        "y": 400,
+        "wires": [
+            [
+                "ea5a5c89.af238",
+                "882e306c.06b7c"
+            ]
+        ]
+    },
+    {
+        "id": "ea5a5c89.af238",
+        "type": "debug",
+        "z": "d7d9aeea.0e585",
+        "name": "ユーザーの入力内容",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 505,
+        "y": 348,
+        "wires": []
+    },
+    {
+        "id": "882e306c.06b7c",
+        "type": "watson-conversation-v1",
+        "z": "d7d9aeea.0e585",
+        "name": "",
+        "workspaceid": "9c58bfc2-0e52-401d-86f2-71498c3ef031",
+        "multiuser": false,
+        "context": true,
+        "empty-payload": false,
+        "default-endpoint": true,
+        "service-endpoint": "https://gateway.watsonplatform.net/conversation/api",
+        "x": 610,
+        "y": 400,
+        "wires": [
+            [
+                "8abf162c.62fff8",
+                "7d371eff.bdb91"
+            ]
+        ]
+    },
+    {
+        "id": "8abf162c.62fff8",
+        "type": "debug",
+        "z": "d7d9aeea.0e585",
+        "name": "Conversationの返り値",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 782,
+        "y": 351,
+        "wires": []
+    },
+    {
+        "id": "7d371eff.bdb91",
+        "type": "switch",
+        "z": "d7d9aeea.0e585",
+        "name": "パラメータ設定",
+        "property": "payload.output.nodes_visited[0]",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "日程確認",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "泊数確認",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "地域確認",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "値段確認",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "outputs": 5,
+        "x": 142,
+        "y": 551,
+        "wires": [
+            [
+                "b7a72076.ec7c9"
+            ],
+            [
+                "9eeb8447.d28448"
+            ],
+            [
+                "1c7aeb86.a10984"
+            ],
+            [
+                "95ec3243.79a8"
+            ],
+            [
+                "8a707061.6ef7e"
+            ]
+        ]
+    },
+    {
+        "id": "b7a72076.ec7c9",
+        "type": "function",
+        "z": "d7d9aeea.0e585",
+        "name": "日程指定",
+        "func": "//日程の指定\ncontext.global.work_URI = encodeURI(\"checkinDate=\"+msg.payload.entities[0].value);\nglobal.set(\"checkin\",msg.payload.entities[0].value);\n\nmsg.payload.URI = context.global.work_URI;\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 362,
+        "y": 511,
+        "wires": [
+            [
+                "8a707061.6ef7e"
+            ]
+        ]
+    },
+    {
+        "id": "9eeb8447.d28448",
+        "type": "function",
+        "z": "d7d9aeea.0e585",
+        "name": "泊数確認",
+        "func": "// 前ノードからのデータ取得\nvar d = global.get(\"checkin\"); //yyyy-mm-dd\nvar checkin = new Date(d); //d にyyyy-mm-dd\nvar stay = Number(msg.payload.entities[0].value);\n\nmsg.globalget = d;\nmsg.stay = stay;\nmsg.checkin = checkin;\n\nvar date = new Date();\ndate.setTime(checkin);\ndate.setDate(date.getDate()+stay);\n//msg.payload=date.toString();\n\nvar formattedDate =\n    date.getFullYear()+ '-' +\n\t( \"0\"+( date.getMonth()+1 ) ).slice(-2)+'-'+\n\t( \"0\"+date.getDate() ).slice(-2);\n\n\ncontext.global.work_URI += encodeURI(\"&checkoutDate=\"+formattedDate);\nmsg.payload.URI = context.global.work_URI;\n//msg.payload = formattedDate;\nreturn msg;  ",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 362,
+        "y": 551,
+        "wires": [
+            [
+                "8a707061.6ef7e"
+            ]
+        ]
+    },
+    {
+        "id": "1c7aeb86.a10984",
+        "type": "function",
+        "z": "d7d9aeea.0e585",
+        "name": "地域指定",
+        "func": "//地域の指定\ncontext.global.work_URI += encodeURI(\"&detailClassCode=\"+msg.payload.entities[0].value);\nmsg.payload.URI = context.global.work_URI;\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 362,
+        "y": 591,
+        "wires": [
+            [
+                "8a707061.6ef7e"
+            ]
+        ]
+    },
+    {
+        "id": "95ec3243.79a8",
+        "type": "function",
+        "z": "d7d9aeea.0e585",
+        "name": "価格指定",
+        "func": "//価格MAX指定(2.5万円)\nvar Price = parseInt(msg.payload.entities[0].value);\nif ( Price > 25000) {\n \t\tPrice = 25000;\n}\n\n//価格MAXの指定\ncontext.global.work_URI += encodeURI(\"&maxCharge=\"+ Price);\n\nmsg.payload.URI = context.global.work_URI;\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 342,
+        "y": 751,
+        "wires": [
+            [
+                "681f7bdb.a00f74",
+                "28bccedb.dd23c2"
+            ]
+        ]
+    },
+    {
+        "id": "8a707061.6ef7e",
+        "type": "function",
+        "z": "d7d9aeea.0e585",
+        "name": "回答を整形",
+        "func": "msg.answer = msg.payload.output.text[0];\nmsg.evaluation = \"\";\nmsg.ref_url = \"\";\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 572,
+        "y": 651,
+        "wires": [
+            [
+                "9a783cb6.b58f8"
+            ]
+        ]
+    },
+    {
+        "id": "681f7bdb.a00f74",
+        "type": "http request",
+        "z": "d7d9aeea.0e585",
+        "name": "楽天API呼び出し",
+        "method": "GET",
+        "ret": "obj",
+        "url": "https://app.rakuten.co.jp/services/api/Travel/VacantHotelSearch/20170426?format=json&largeClassCode=japan&middleClassCode=tokyo&smallClassCode=tokyo&{{{payload.URI}}}&page=1&hits=3&applicationId=XXXXXXXXXX",
+        "tls": "",
+        "x": 572,
+        "y": 731,
+        "wires": [
+            [
+                "3946b281.c3ea2e",
+                "f86a7a44.607018"
+            ]
+        ]
+    },
+    {
+        "id": "28bccedb.dd23c2",
+        "type": "debug",
+        "z": "d7d9aeea.0e585",
+        "name": "パラメータ",
+        "active": true,
+        "console": "false",
+        "complete": "payload.URI",
+        "x": 512,
+        "y": 791,
+        "wires": []
+    },
+    {
+        "id": "9a783cb6.b58f8",
+        "type": "template",
+        "z": "d7d9aeea.0e585",
+        "name": "レスポンスの定義",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "{\n    \"response\" : \"{{answer}}\",\n    \"evaluation\" : \"{{evaluation}}\",\n    \"ref_url\" : \"{{ref_url}}\"\n}\n",
+        "x": 792,
+        "y": 531,
+        "wires": [
+            [
+                "6b59869d.450378",
+                "37cfed77.918032"
+            ]
+        ]
+    },
+    {
+        "id": "3946b281.c3ea2e",
+        "type": "debug",
+        "z": "d7d9aeea.0e585",
+        "name": "API呼び出し結果",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 752,
+        "y": 791,
+        "wires": []
+    },
+    {
+        "id": "f86a7a44.607018",
+        "type": "function",
+        "z": "d7d9aeea.0e585",
+        "name": "結果の整形",
+        "func": "msg.answer = \"「\" + msg.payload.hotels[0].hotel[0].hotelBasicInfo.hotelName + \"」がおすすめです！\";\nmsg.evaluation = \"料金：\" + msg.payload.hotels[0].hotel[1].roomInfo[1].dailyCharge.rakutenCharge + \"~\";\nmsg.ref_url = msg.payload.hotels[0].hotel[1].roomInfo[0].roomBasicInfo.reserveUrl;\n\nreturn msg;\n\n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 752,
+        "y": 671,
+        "wires": [
+            [
+                "9a783cb6.b58f8"
+            ]
+        ]
+    },
+    {
+        "id": "6b59869d.450378",
+        "type": "debug",
+        "z": "d7d9aeea.0e585",
+        "name": "レスポンス",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 972,
+        "y": 571,
+        "wires": []
+    },
+    {
+        "id": "37cfed77.918032",
+        "type": "http response",
+        "z": "d7d9aeea.0e585",
+        "name": "",
+        "x": 992,
+        "y": 511,
+        "wires": []
+    },
+    {
+        "id": "d60af35b.b83a5",
+        "type": "watson-conversation-v1",
+        "z": "d7d9aeea.0e585",
+        "name": "",
+        "workspaceid": "9c58bfc2-0e52-401d-86f2-71498c3ef031",
+        "multiuser": false,
+        "context": true,
+        "empty-payload": false,
+        "default-endpoint": true,
+        "service-endpoint": "https://gateway.watsonplatform.net/conversation/api",
+        "x": 330,
+        "y": 40,
+        "wires": [
+            [
+                "19f66204.143eee",
+                "bd26f20f.9f351"
+            ]
+        ]
+    },
+    {
+        "id": "878d1d4f.7977",
+        "type": "inject",
+        "z": "d7d9aeea.0e585",
+        "name": "",
+        "topic": "",
+        "payload": "テスト",
+        "payloadType": "str",
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "x": 106,
+        "y": 40,
+        "wires": [
+            [
+                "3a648d9.6304472"
+            ]
+        ]
+    },
+    {
+        "id": "bd26f20f.9f351",
+        "type": "debug",
+        "z": "d7d9aeea.0e585",
+        "name": "",
+        "active": true,
+        "console": "false",
+        "complete": "payload.output.text[0]",
+        "x": 720,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "19f66204.143eee",
+        "type": "debug",
+        "z": "d7d9aeea.0e585",
+        "name": "",
+        "active": true,
+        "console": "false",
+        "complete": "false",
+        "x": 670,
+        "y": 20,
+        "wires": []
+    },
+    {
+        "id": "3a648d9.6304472",
+        "type": "template",
+        "z": "d7d9aeea.0e585",
+        "name": "野球をしたい",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "plain",
+        "template": "野球をしたい",
+        "output": "str",
+        "x": 220,
+        "y": 100,
+        "wires": [
+            [
+                "d60af35b.b83a5"
+            ]
+        ]
+    },
+    {
+        "id": "56545747.64ffa8",
+        "type": "http in",
+        "z": "d7d9aeea.0e585",
+        "name": "",
+        "url": "/bot",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 100,
+        "y": 240,
+        "wires": [
+            [
+                "bec1470b.cfdc38"
+            ]
+        ]
+    },
+    {
+        "id": "fb914c70.5a463",
+        "type": "http response",
+        "z": "d7d9aeea.0e585",
+        "name": "",
+        "x": 530,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "b18d94d.cecd768",
+        "type": "comment",
+        "z": "d7d9aeea.0e585",
+        "name": "1. botページの表示",
+        "info": "",
+        "x": 110,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "b42394b9.200938",
+        "type": "template",
+        "z": "d7d9aeea.0e585",
+        "name": "入力画面",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "<head>\n  <meta charset=\"UTF-8\">\n  <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\n  <title>Watson Conversation</title>\n  <link href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css\" rel=\"stylesheet\">\n  <style type=\"text/css\">\n\n\n  .bs-component {\n    position: relative;\n  }\n  .demoSize{\n    font-size: 22px; /*DEMO*/\n  }\n  .textEllipsis{\n    overflow: hidden;\n    text-overflow: ellipsis;\n    white-space: nowrap;\n  }\n  div#headerArea {\n    position: fixed !important;\n    position: absolute;\n    background-color: #00DD00;\n    color: #FFF;\n    top: 0;\n    height: 50px;\n    left: 0;\n    width: 100%;\n    z-index: 2;\n  }\n  div#conversation_field {\n    padding-left: 10%;\n    padding-right: 10%;\n  }\n  input.btn{\n    background-color: #00DD00;\n    color: #FFFFFF;\n  }\n\n\n  @media ( min-width: 768px ) {\n    body {\n      padding-top: 80px;\n      padding-bottom: 10%;\n    }\n    div#footerArea {\n      position: fixed !important;\n      position: absolute;\n      background-color: #FFFFFF;\n      bottom: 0;\n      height: 100px;\n      padding-top: 10px;\n      padding-right: 10%;\n      left: 0;\n      width:  80vw;\n      z-index: 1;\n    }\n    #QuestionText{\n      width:  70vw;\n      margin-left: 1%;\n    }\n  }\n\n  /*モバイル用 Media Queries*/\n  @media screen and (max-width: 768px) {\n    body {padding-top: 80px;\n      padding-bottom: 10%;\n    }\n    #banner {\n      min-height: 70px;\n      border-bottom: none;\n    }\n    div#conversation_field {\n    padding-left: 10%;\n    padding-right: 10%;\n    padding-bottom: 15%;\n  }\n    div#footerArea {\n      position: fixed !important;\n      position: absolute;\n      background-color: #FFFFFF;\n      bottom: 0;\n      height: 100px;\n      padding-top: 0px;\n      padding-right: 0%;\n      left: 0;\n      width: 100%;\n      z-index: 3;\n      background-color: transparent;\n    }\n    div.content{\n      position: absolute;\n      bottom:26%;\n    }\n\n    #QuestionText{\n      width: 70vw;\n      margin-left: 1%;\n    }\n  }\n\n  /* balloon common */\n  div.balloon-wrapper {\n  \twidth: 500px;\n  \tmargin: 15px auto;\n  }\n  div.balloon-wrapper::after {\n  \tclear: both;\n  \tcontent: \"\";\n  \tdisplay: block;\n  \tline-height: 0;\n  }\n  p.balloon-left,\n  p.balloon-right {\n  \tposition: relative;\n  \tz-index: 1;\n  \tmax-width: 80%;\n  \tmin-width: 10%;\n  \tmargin: 15px auto;\n  \tpadding: 13px;\n  \tbackground-color: #fff;\n  \tborder-width: 3px;\n  \tborder-style: solid;\n  \tborder-radius: 10px;\n  }\n  p.balloon-left::before,\n  p.balloon-right::before {\n  \tcontent: \"\";\n  \tdisplay: block;\n  \tposition: absolute;\n  \tz-index: 10;\n  \ttop: 10px;\n  \twidth:  0;\n  \theight: 0;\n  \tborder: 15px solid transparent;\n  }\n  p.balloon-left::after,\n  p.balloon-right::after {\n  \tcontent: \"\";\n  \tdisplay: block;\n  \tposition: absolute;\n  \tz-index: 100;\n  \ttop: 10px;\n  \twidth:  0;\n  \theight: 0;\n  \tborder: 15px solid transparent;\n  }\n\n  /* balloon left */\n  p.balloon-left {\n  \tfloat: left;\n  \tborder-color: #EEEEEE;\n    background-color: #EEEEEE;\n    overflow: hidden;\n    width: 100%;\n  }\n  p.balloon-left::before {\n  \tleft: -31px;\n  \tborder-right: 15px solid #EEEEEE;\n  }\n  p.balloon-left::after {\n  \tleft: -26px;\n  \tborder-right: 15px solid #EEEEEE;\n  }\n\n  /* balloon right */\n  p.balloon-right {\n  \tfloat: right;\n  \tborder-color: #00DD00;\n  \tbackground-color: #00DD00;\n    color:#ffffff;\n  }\n  p.balloon-right::before {\n  \tright: -31px;\n  \tborder-left: 15px solid #00DD00;\n  }\n  p.balloon-right::after {\n  \tright: -26px;\n  \tborder-left: 15px solid #00DD00;\n  }\n  </style>\n\n</head>\n<body class=\"demoSize\" style=\"font-family:'Lucida Grande', 'Hiragino Kaku Gothic ProN', 'ヒラギノ角ゴ ProN W3', Meiryo, メイリオ, sans-serif;\">\n\n  <!-- header\n  ================================================== -->\n  <header>\n      <div class=\"container-fluid\" id=\"headerArea\">\n        <h4>Watson Conversation</h4>\n      </div><!-- /.container-fluid -->\n  </header>\n\n  <!-- ガイド部分\n  ================================================== -->\n  <div class=\"row\">\n    <div class=\"col-lg-8 col-md-10 col-sm-12 col-xs-12\">\n        <div class=\"bs-component\">\n            <div id=\"conversation_field\"></div>\n        </div>\n    </div>\n  </div>\n\n  <!-- Footer箇所\n  ================================================== -->\n  <form id=\"searchFormId\" action=\"#\">\n  <div class=\"row container-fluid\" id=\"footerArea\">\n    \t<div class=\"content\">\n          <table>\n            <tr>\n              <td><input type=\"text\" class=\"form-control demoSize\" id=\"QuestionText\" placeholder=\"文章を入力してください\"></td>\n              <td><input type=\"submit\" value=\"送信\" class=\"btn demoSize\" onclick=\"askwatson($('#QuestionText').val());\"></button></td>\n            </tr>\n          </table>\n    \t</div>\n  </div>\n  </form>\n\n  <!-- JavaScript Section\n  ================================================== -->\n  <script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js\"></script>\n  <script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js\"></script>\n  <script>\n  var answerNumber = 1;\n  var conversation_id = \"\";\n  var client_id = \"\";\n  var dialog=false;\n\n$(function(){\n  setTimeout(function(){\n    document.getElementById(\"conversation_field\").innerHTML += '<div class=\"row\"><div class=\"col-xs-11\"><p class=\"balloon-left\">{{payload}}</p></div></div>';\n   },1000);\n  });\n\n  function askwatson(question) {\n    question = question.replace(/\\r?\\n/g,\"\");\n    question_no_space = question.replace(/\\s/g,\"\");\n    if(question_no_space != \"\") {\n        document.getElementById(\"conversation_field\").innerHTML += '<div class=\"row\"><div class=\"col-xs-11\"><p class=\"balloon-right\" id=\"watsonAnswer' + answerNumber + '\">' + question + '</p></div></div>';\n        $('#QuestionText').val(\"\");\n        $.ajax({\n            url: '/bot',\n            type: \"POST\",\n            data: {\n                \"input_text\" : question\n            },\n            dataType: 'json',\n        })\n        .done(function(response){\n            if(response.conversation_id != null){\n                conversation_id = response.conversation_id;\n                dialog=true;\n            }\n//            var answer = response.response.replace(/\\n/g, \"<br>\") + '<br>(' + response.evaluation + ')';\n            var answer = response.response.replace(/\\n/g, \"<br>\");\n            if(response.evaluation!==\"\") {\n                answer += '<br>(' + response.evaluation + ')';\n            }\n            if(response.ref_url!==\"\") {\n                answer += '<br><a href=\"'+response.ref_url+'\" target=\"_blank\">'+response.ref_url+'</a>';\n            }\n            document.getElementById(\"conversation_field\").innerHTML += '<div class=\"row\"><div class=\"col-xs-11\"><p class=\"balloon-left\">' + answer + '</p></div></div>';\n            document.getElementById(\"watsonAnswer\" + answerNumber).scrollIntoView(true);\n            document.getElementById(\"QuestionText\").focus();\n            $('#QuestionText').val(\"\");\n            answerNumber++;\n        })\n        .fail(function( jqXHR, textStatus, errorThrown ){\n            document.getElementById(\"conversation_field\").innerHTML += '<div class=\"row\"><div class=\"col-xs-11\"><p class=\"balloon-left\">' + \"申し訳ございません。データに不備があります。\" + '</p></div></div>';\n        });\n\n    }\n    $('#searchFormId').on('submit', function() {\n        var question = $('#QuestionText').val();\n        askwatson(question);\n        return false;\n    });\n  }\n  </script>\n</body>\n",
+        "x": 380,
+        "y": 240,
+        "wires": [
+            [
+                "fb914c70.5a463"
+            ]
+        ]
+    },
+    {
+        "id": "bec1470b.cfdc38",
+        "type": "template",
+        "z": "d7d9aeea.0e585",
+        "name": "あいさつ",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "どちらへお出かけですか？",
+        "x": 240,
+        "y": 240,
+        "wires": [
+            [
+                "b42394b9.200938"
+            ]
+        ]
+    }
+]
